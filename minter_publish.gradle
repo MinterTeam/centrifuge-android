@@ -133,6 +133,7 @@ publishing {
 if (hasProperty("minter_bintray_user") && hasProperty("minter_bintray_key")) {
     println "Bintray upload: available"
     bintray {
+        publications = ["${releaseArtifactId}"]
         user = getProperty("minter_bintray_user")
         key = getProperty("minter_bintray_key")
         pkg {
@@ -143,9 +144,11 @@ if (hasProperty("minter_bintray_user") && hasProperty("minter_bintray_key")) {
             vcsUrl = 'https://github.com/MinterTeam/centrifuge-android.git'
 
             version {
-                name = version
+                name = releaseVersion
                 desc = pomDescription
                 released = new Date()
+                vcsTag = releaseVersion
+
             }
         }
     }
