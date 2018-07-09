@@ -1,5 +1,9 @@
 # centrifuge-android
+
 Centrifugo android client
+[ ![Download 0.37](https://api.bintray.com/packages/minterteam/android/centrifuge-android/images/download.svg) ](https://bintray.com/minterteam/android/centrifuge-android/_latestVersion)
+
+### This is UNOFFICIAL fork from https://github.com/centrifugal/centrifuge-android and in this repo we're used master branch to create version 0.37
 
 ### Usage
 
@@ -93,8 +97,8 @@ centrifugo.requestHistory("my-channel")
 ### Installation
 Add
 
-```
-compile 'com.github.centrifugal:centrifuge-android:0.36'
+```groovy
+implementation 'network.minter.android:centrifuge-android:0.37'
 ```
 to <b>dependencies</b> in your <b>build.gradle</b>    
 
@@ -104,7 +108,7 @@ apply plugin: 'com.android.application'
 
 repositories {
     mavenCentral()
-    maven { url "https://oss.sonatype.org/content/repositories/releases/" }
+    maven { url "https://dl.bintray.com/minterteam/android" }
 }
 
 ...
@@ -112,11 +116,11 @@ repositories {
 dependencies {
     compile fileTree(include: ['*.jar'], dir: 'libs')
     testCompile 'junit:junit:4.12'
-    compile 'com.github.centrifugal:centrifuge-android:0.36'
+    implementation 'network.minter.android:centrifuge-android:0.37'
 }
 
 ```
 
-Have a look at example [application](https://github.com/Centrifugal/centrifuge-android/tree/dev/app)
+Have a look at example [application](https://github.com/MinterTeam/centrifuge-android/tree/dev/app)
     
     

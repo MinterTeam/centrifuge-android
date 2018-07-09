@@ -27,6 +27,7 @@ public class DataMessage extends DownstreamMessage {
     @Nullable
     private Info info;
 
+    @Deprecated
     @Nonnull
     private Date timestamp;
 
@@ -80,6 +81,7 @@ public class DataMessage extends DownstreamMessage {
         return info;
     }
 
+    @Deprecated
     @Nonnull
     public Date getTimestamp() {
         return timestamp;
