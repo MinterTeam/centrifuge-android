@@ -10,6 +10,7 @@ import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.centrifugal.centrifuge.android.Centrifugo;
+import com.centrifugal.centrifuge.android.config.ReconnectConfig;
 import com.centrifugal.centrifuge.android.credentials.Token;
 import com.centrifugal.centrifuge.android.credentials.User;
 import com.centrifugal.centrifuge.android.listener.ConnectionListener;
@@ -35,9 +37,11 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.lang.reflect.Array;
+import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -77,11 +81,21 @@ public class MainActivity extends AppCompatActivity {
 //                String timestamp = loginObject.optString("timestamp");
 //                String token = loginObject.optString("token");
 //                String centrifugoAddress = loginObject.optString("centrifugoWS");
-                centrifugo = new Centrifugo.Builder("wss://92.53.87.98:8000/connection/websocket")
-                        .setUser(new User("137", null))
-                        .setToken(new Token("3f39f831008af6af0ed9831992c3c96f257a21d6fd0fff675a3b88b5652ab798", "1531150689"))
-                        .build();
-                centrifugo.subscribe(new SubscriptionRequest("Y4OTszZjM5ZjgzMTAwOG"));
+/*
+	            "data": {
+		            "channel": "MTIzMzQ1MjtlYjdjYmU3",
+				            "timestamp": 1531233452,
+				            "token": "eb7cbe7dca732f58e572178dd2d172232aa77039fbf875893dd93d4b78575d2f"
+	            }
+*/
+
+                centrifugo = new Centrifugo.Builder("ws://92.53.87.98:8000/connection/websocket")
+		                .setReconnectConfig(new ReconnectConfig(10, 3, TimeUnit.SECONDS))
+		                .setUser(new User("0", "e1d78ee4f65fdec2cb2aab88e53083938d00879f73562b9bffcaf70bda867c8e"))
+		                .setToken(new Token("e1d78ee4f65fdec2cb2aab88e53083938d00879f73562b9bffcaf70bda867c8e", "1531233706"))
+		                .setDebug(true)
+		                .build();
+                centrifugo.subscribe(new SubscriptionRequest("zMzcwNjtlMWQ3OGVlNGY"));
                 centrifugo.setConnectionListener(new ConnectionListener() {
                     @Override
                     public void onWebSocketOpen() {
@@ -132,7 +146,13 @@ public class MainActivity extends AppCompatActivity {
                         message(leftMessage.getUser(), " just left " + leftMessage.getChannel());
                     }
                 });
-                centrifugo.connect();
+	            try {
+		            centrifugo.connect();
+	            } catch (IOException e) {
+		            e.printStackTrace();
+	            } catch (NoSuchAlgorithmException e) {
+		            e.printStackTrace();
+	            }
             }
         }.start();
     }
@@ -224,6 +244,7 @@ public class MainActivity extends AppCompatActivity {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
+	            Log.d(messageMain, message);
                 SpannableStringBuilder snackbarText = new SpannableStringBuilder();
                 snackbarText.append(messageMain);
                 snackbarText.setSpan(new ForegroundColorSpan(0xFF00DD00), 0, snackbarText.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
