@@ -1,0 +1,157 @@
+// DEFS
+
+task printFlavors {
+    String[] flavors = new String[android.productFlavors.size() * 2]
+
+    int s = 0
+    for (flavor in android.productFlavors) {
+        flavors[s++] = flavor.name + "Debug"
+        flavors[s++] = flavor.name + "Release"
+    }
+
+    for (fname in flavors) {
+        println fname
+    }
+}
+
+def pomDescription = (hasProperty("pomDescription") ? getProperty("pomDescription") : "Minter Blockchain Android SDK")
+
+group = getProperty("group")
+version = android.defaultConfig.versionName
+def releaseGroup = this.group
+def releaseVersion = this.version
+def releaseArtifactId = project.name
+def artifactName = ""
+
+if(hasProperty("buildArtifactName") && !getProperty("buildArtifactName").isEmpty()) {
+    releaseArtifactId = getProperty("buildArtifactName")
+}
+
+if(hasProperty("buildFlavor") && !getProperty("buildFlavor").isEmpty()) {
+    def flavorName = getProperty("buildFlavor")
+    flavorName = flavorName.substring(0,1).toLowerCase() + flavorName.substring(1)
+    flavorName = flavorName.replace("Debug", "-debug").replace("Release", "-release")
+    artifactName = releaseArtifactId + "-" + flavorName + ".aar"
+} else {
+    artifactName = releaseArtifactId + ".aar"
+}
+
+if(hasProperty("artifactSuffix") && !getProperty("artifactSuffix").isEmpty()) {
+    releaseArtifactId += "-" + getProperty("artifactSuffix")
+}
+
+println "Artifact {" +
+        "\n\tid: ${releaseArtifactId}," +
+        "\n\tgroup: ${releaseGroup}," +
+        "\n\tversion: ${releaseVersion}" +
+        "\n\tname (file): $buildDir/outputs/aar/${artifactName}" +
+        "\n\troot project name: ${rootProject.name}" +
+        "\n\tproject name: ${project.name}" +
+        "\n\timplementation example: implementation '${releaseGroup}:${releaseArtifactId}:${version}'" +
+        "\n}"
+
+// rename output lib file to artifactName with aar extension
+android.libraryVariants.all { variant ->
+    variant.outputs.all { output ->
+        if (outputFile != null && outputFileName.endsWith('.aar')) {
+            outputFileName = "${artifactName}"
+        }
+    }
+}
+
+// TASKS
+tasks.withType(Jar) {
+    from(project.projectDir) {
+        include 'LICENSE'
+        into 'META-INF'
+    }
+}
+
+task androidJavadoc(type: Javadoc) {
+    failOnError false
+    source = android.sourceSets.main.java.sourceFiles
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    classpath += configurations.compile
+}
+
+// build a jar with javadoc
+task androidJavadocJar(type: Jar, dependsOn: androidJavadoc) {
+    classifier = 'javadoc'
+    from androidJavadoc.destinationDir
+}
+
+task androidSourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.source
+}
+
+publishing {
+    publications {
+        "${releaseArtifactId}"(MavenPublication) {
+            groupId releaseGroup
+            artifactId releaseArtifactId
+            version releaseVersion
+
+            // Tell maven to prepare the generated "*.aar" file for publishing
+            artifact("$buildDir/outputs/aar/${artifactName}")
+            artifact androidSourcesJar
+            artifact androidJavadocJar
+
+            pom.withXml {
+                asNode().appendNode("description", pomDescription)
+                def licenses = asNode().appendNode("licenses")
+                def mitLicense = licenses.appendNode("license")
+                mitLicense.appendNode("name", "MIT License")
+                mitLicense.appendNode("url", "https://opensource.org/licenses/MIT")
+                mitLicense.appendNode("distribution", "repo")
+
+                def developer = asNode().appendNode("developers").appendNode("developer")
+                developer.appendNode("id", "edwardstock")
+                developer.appendNode("name", "Eduard Maximovich")
+                developer.appendNode("email", "edward.vstock@gmail.com")
+                developer.appendNode("url", "https://github.com/edwardstock")
+                developer.appendNode("roles").appendNode("role", "developer")
+                developer.appendNode("timezone", "Europe/Moscow")
+
+                def dependenciesNode = asNode().appendNode('dependencies')
+
+                // Iterate over the implementation dependencies (we don't want the test ones), adding a <dependency> node for each
+                configurations.implementation.allDependencies.each {
+                    // Ensure dependencies such as fileTree are not included in the pom.
+                    if (it.name != 'unspecified') {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', it.group)
+                        dependencyNode.appendNode('artifactId', it.name)
+                        dependencyNode.appendNode('version', it.version)
+                    }
+                }
+            }
+        }
+    }
+}
+
+if (hasProperty("minter_bintray_user") && hasProperty("minter_bintray_key")) {
+    println "Bintray upload: available"
+    bintray {
+        publications = ["${releaseArtifactId}"]
+        user = getProperty("minter_bintray_user")
+        key = getProperty("minter_bintray_key")
+        pkg {
+            repo = minter_org_repo
+            name = releaseArtifactId
+            userOrg = minter_org_name
+            licenses = ['MIT']
+            vcsUrl = 'https://github.com/MinterTeam/centrifuge-android.git'
+
+            version {
+                name = releaseVersion
+                desc = pomDescription
+                released = new Date()
+                vcsTag = releaseVersion
+
+            }
+        }
+    }
+} else {
+    println "Bintray upload: unavailable"
+}

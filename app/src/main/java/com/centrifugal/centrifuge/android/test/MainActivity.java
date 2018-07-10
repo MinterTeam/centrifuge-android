@@ -60,76 +60,28 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        findViewById(R.id.login).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View v) {
-                login();
-            }
-        });
-        findViewById(R.id.subscribe).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View v) {
-                final String channel = channelEditText.getText().toString();
-                centrifugo.subscribe(new SubscriptionRequest(channel));
-            }
-        });
-        addressEditText = (EditText) findViewById(R.id.address);
-        userNameEditText = (EditText) findViewById(R.id.user_name);
-        channelEditText = (EditText) findViewById(R.id.channel_name);
-        listView = (ListView) findViewById(R.id.messages);
-        stringArrayAdapter = new Adapter();
-        listView.setAdapter(stringArrayAdapter);
+        findViewById(R.id.login).setOnClickListener(v -> login());
     }
 
     private Centrifugo centrifugo;
 
     private void login() {
-        String address = addressEditText.getText().toString();
-        if (!address.contains("http")) {
-            address = "http://" + address;
-        }
-        final String user = userNameEditText.getText().toString();
-        final String channel = channelEditText.getText().toString();
-        final String fAddress = address;
         new Thread() {
             @Override
             public void run() {
-                OkHttpClient okHttpClient = new OkHttpClient();
-                Request build = new Request.Builder().url(Uri.parse(fAddress + "/token?userId=" + user).toString()).build();
-                Response execute = null;
-                try {
-                    execute = okHttpClient.newCall(build).execute();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    error("failed to execute HTTP request: " + e.getMessage());
-                    return;
-                }
-                String body = null;
-                try {
-                    body = execute.body().string();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    error("failed to parse HTTP response: " + e.getMessage());
-                }
-                JSONObject loginObject = null;
-                try {
-                    loginObject = new JSONObject(body);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    error("failed to parse json: " + e.getMessage());
-                    return;
-                }
-                String userId = loginObject.optString("userId");
-                String timestamp = loginObject.optString("timestamp");
-                String token = loginObject.optString("token");
-                String centrifugoAddress = loginObject.optString("centrifugoWS");
-                centrifugo = new Centrifugo.Builder(centrifugoAddress)
-                        .setUser(new User(userId, null))
-                        .setToken(new Token(token, timestamp))
+
+                //channel=Y4OTszZjM5ZjgzMTAwOG, token=3f39f831008af6af0ed9831992c3c96f257a21d6fd0fff675a3b88b5652ab798, timestamp=1531150689
+//                String userId = loginObject.optString("userId");
+//                String timestamp = loginObject.optString("timestamp");
+//                String token = loginObject.optString("token");
+//                String centrifugoAddress = loginObject.optString("centrifugoWS");
+                centrifugo = new Centrifugo.Builder("wss://92.53.87.98:8000/connection/websocket")
+                        .setUser(new User("137", null))
+                        .setToken(new Token("3f39f831008af6af0ed9831992c3c96f257a21d6fd0fff675a3b88b5652ab798", "1531150689"))
                         .build();
-                centrifugo.subscribe(new SubscriptionRequest(channel));
+                centrifugo.subscribe(new SubscriptionRequest("Y4OTszZjM5ZjgzMTAwOG"));
                 centrifugo.setConnectionListener(new ConnectionListener() {
                     @Override
                     public void onWebSocketOpen() {

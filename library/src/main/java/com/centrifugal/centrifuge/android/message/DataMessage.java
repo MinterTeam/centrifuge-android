@@ -24,9 +24,10 @@ public class DataMessage extends DownstreamMessage {
     @Nonnull
     private String channel;
 
-    @Nullable
-    private Info info;
+	@Nullable
+	private Info info;
 
+    @Deprecated
     @Nonnull
     private Date timestamp;
 
@@ -64,10 +65,6 @@ public class DataMessage extends DownstreamMessage {
             JSONObject channelInfo = infoJSON.optJSONObject("channel_info");
             info = new Info(user, defaultInfo, channelInfo);
         }
-
-
-        String timestampString = body.optString("timestamp");
-        timestamp = new Date(Long.valueOf(timestampString));
     }
 
     public String getData() {
@@ -84,6 +81,7 @@ public class DataMessage extends DownstreamMessage {
         return info;
     }
 
+    @Deprecated
     @Nonnull
     public Date getTimestamp() {
         return timestamp;

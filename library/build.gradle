@@ -1,19 +1,29 @@
 apply plugin: 'com.android.library'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
 
 repositories {
     mavenCentral()
     maven { url 'https://dl.bintray.com/palantir/releases' }
 }
 
+group = "network.minter.android"
+version = "0.37"
+
+ext {
+    pomDescription = POM_DESCRIPTION
+}
+
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    compileSdkVersion 27
+    buildToolsVersion "28.0.0"
 
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 21//because robolectric doesnt support API level 23
-        versionCode 9
-        versionName "0.36-SNAPSHOT"
+        targetSdkVersion 27 //because robolectric doesnt support API level 23
+        versionCode 10
+        versionName version
     }
     buildTypes {
         release {
@@ -22,33 +32,24 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_7
-        targetCompatibility JavaVersion.VERSION_1_7
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
 dependencies {
-    compile 'org.java-websocket:Java-WebSocket:1.3.0'
-    compile 'com.google.code.findbugs:jsr305:3.0.1'
-    testCompile 'junit:junit:4.12'
-    testCompile('org.robolectric:robolectric:3.0') {
+    implementation 'org.java-websocket:Java-WebSocket:1.3.0'
+    implementation 'com.google.code.findbugs:jsr305:3.0.1'
+    testImplementation 'junit:junit:4.12'
+    testImplementation('org.robolectric:robolectric:3.0') {
         exclude module: 'httpclient'
     }
-    testCompile 'org.mockito:mockito-core:2.+'
-    testCompile 'com.squareup.okhttp3:okhttp:3.2.0'
-    testCompile 'com.squareup.okhttp:mockwebserver:2.7.5'
-    testCompile 'commons-codec:commons-codec:1.9'
-    testCompile files('lib/testcontainers-1.0.5.jar')
+    testImplementation 'org.mockito:mockito-core:2.+'
+    testImplementation 'com.squareup.okhttp3:okhttp:3.10.0'
+    testImplementation 'com.squareup.okhttp:mockwebserver:2.7.5'
+    testImplementation 'commons-codec:commons-codec:1.10'
+    testImplementation files('lib/testcontainers-1.0.5.jar')
 }
 
 
-
-apply from: '../gradle-mvn-push.gradle'
-
-afterEvaluate { project ->
-    android.libraryVariants.all { variant ->
-        tasks.androidJavadocs.doFirst {
-            classpath += files(variant.javaCompile.classpath.files)
-        }
-    }
-}
+apply from: '../minter_publish.gradle'
